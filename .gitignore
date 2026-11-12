@@ -7,3 +7,4 @@
 *.apk
 *.zip
 /app/src/main/jniLibs/
+/.kotlin/

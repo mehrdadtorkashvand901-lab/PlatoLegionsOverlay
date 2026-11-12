@@ -52,9 +52,10 @@ object Session {
     fun describe(s: JSONObject, a: JSONObject): String {
         val m=a.optJSONObject("best_move") ?: return "بازی تمام شده است"
         val deck=s.getJSONArray(if (s.getInt("turn")==1) "blue" else "red")
-        val label=GameModel.label(deck.getJSONObject(m.getInt("card"))).substringBefore('\n')
+        val card=deck.getJSONObject(m.getInt("card"))
+        val label=GameModel.label(card).substringBefore('\n')
         val depth=a.getInt("completed_depth")
-        return "کارت ${m.getInt("card")+1}: $label\nردیف ${m.getInt("row")+1}، ستون ${m.getInt("col")+1}\nعمق $depth | ${a.getLong("elapsed_ms")} ms | ${a.getLong("nodes")} گره" +
+        return "کارت ${m.getInt("card")+1}: $label\nبالا ${card.getInt("top")}، راست ${card.getInt("right")}\nپایین ${card.getInt("bottom")}، چپ ${card.getInt("left")}\nردیف ${m.getInt("row")+1}، ستون ${m.getInt("col")+1}\nعمق $depth | ${a.getLong("elapsed_ms")} ms | ${a.getLong("nodes")} گره" +
             if (depth==0) "\nفرصت جست‌وجو کافی نبود؛ این فقط حرکت قانونی اضطراری است" else if (a.optBoolean("solved")) "\nتا پایان بازی بررسی شد" else "\nبهترین حرکت در عمق کامل‌شده؛ تضمین برد ندارد"
     }
 }

@@ -4,7 +4,8 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION"/>
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
-    <application android:allowBackup="false" android:supportsRtl="true" android:label="دستیار لژیون" android:theme="@style/AppTheme" android:usesCleartextTraffic="false">
+    <application android:allowBackup="false" android:dataExtractionRules="@xml/data_extraction_rules" android:icon="@drawable/ic_legions" android:supportsRtl="true" android:label="دستیار لژیون" android:theme="@style/AppTheme" android:usesCleartextTraffic="false">
+        <service android:name=".CaptureService" android:exported="false" android:foregroundServiceType="mediaProjection"/>
         <activity android:name=".MainActivity" android:exported="true" android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize">
             <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter>
         </activity>

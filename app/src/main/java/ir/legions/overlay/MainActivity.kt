@@ -81,6 +81,7 @@ class MainActivity : Activity() {
         }
         button("ثبت حرکت انجام‌شده در بازی") { recordMove() }
         button("ویرایش یا کپی JSON کامل وضعیت") { jsonEditor() }
+        addCaptureControls()
         button("مجوز MIT و مالکیت موتور") { AlertDialog.Builder(this).setMessage(assets.open("ENGINE_LICENSE.txt").bufferedReader().readText()).setPositiveButton("بستن",null).show() }
     }
     private fun editCell(y: Int,x: Int) {
@@ -114,5 +115,38 @@ class MainActivity : Activity() {
         AlertDialog.Builder(this).setTitle("وضعیت کامل").setView(ScrollView(this).apply { addView(input) }).setPositiveButton("اعتبارسنجی و ذخیره") { _,_ -> safely {
             val s=JSONObject(input.text.toString()); EngineBridge.call(JSONObject().put("op","validate").put("state",s)); Session.set(s,this)
         } }.setNegativeButton("بستن",null).show()
+    }
+    private fun addCaptureControls() {
+        body.addView(text("ضبط صفحه و پنجرهٔ شناور",20f))
+        body.addView(text(CaptureRuntime.status+"\nتشخیص تصویر آزمایشی است و هر وضعیت نیاز به بازبینی دارد. برای Overlay دستی، پس از هر حرکت وضعیت را اصلاح کنید."))
+        button("شروع ضبط با مجوز سیستم و نمایش Overlay") { startCapture() }
+        button("توقف ضبط و بستن Overlay") { stopService(android.content.Intent(this,CaptureService::class.java)) }
+        button("کالیبراسیون جدول، دسته‌ها و نشانگر نوبت") { VisionUi(this).calibrate() }
+        button("آموزش نمونه از تصویر واقعی") { VisionUi(this).teach() }
+        button("بازبینی وضعیت شناسایی‌شده") { VisionUi(this).review() }
+        button("استفاده از وضعیت دستی فعلی در Overlay") {
+            EngineBridge.call(JSONObject().put("op","validate").put("state",Session.state))
+            CaptureRuntime.manualSnapshot=true; Session.stop()
+            Toast.makeText(this,"حالت دستی: بعد از هر حرکت وضعیت را اصلاح کنید",Toast.LENGTH_LONG).show()
+        }
+        button("پاک‌کردن نمونه‌های تصویری") { VisionUi(this).clear() }
+    }
+    private fun startCapture() {
+        if (!android.provider.Settings.canDrawOverlays(this)) {
+            startActivity(android.content.Intent(android.provider.Settings.ACTION_MANAGE_OVERLAY_PERMISSION,android.net.Uri.parse("package:$packageName")))
+            Toast.makeText(this,"نمایش روی برنامه‌ها را مجاز کنید و سپس دوباره دکمهٔ شروع را بزنید",Toast.LENGTH_LONG).show(); return
+        }
+        if (checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS)!=android.content.pm.PackageManager.PERMISSION_GRANTED) requestPermissions(arrayOf(android.Manifest.permission.POST_NOTIFICATIONS),101)
+        val manager=getSystemService(android.media.projection.MediaProjectionManager::class.java)
+        val request=if(android.os.Build.VERSION.SDK_INT>=34) manager.createScreenCaptureIntent(android.media.projection.MediaProjectionConfig.createConfigForDefaultDisplay()) else manager.createScreenCaptureIntent()
+        startActivityForResult(request,102)
+    }
+    override fun onActivityResult(requestCode: Int,resultCode: Int,data: android.content.Intent?) {
+        super.onActivityResult(requestCode,resultCode,data)
+        if(requestCode==102) {
+            if(resultCode==RESULT_OK && data!=null) safely {
+                startForegroundService(android.content.Intent(this,CaptureService::class.java).putExtra("code",resultCode).putExtra("data",data))
+            } else Session.error("ضبط صفحه مجاز نشد؛ ورود دستی همچنان قابل استفاده است")
+        }
     }
 }

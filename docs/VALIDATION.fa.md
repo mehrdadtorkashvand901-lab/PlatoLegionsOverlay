@@ -8,7 +8,7 @@
 - عبور واقعی Java → JNI → Rust: ایجاد بازی، خطای JSON و تبدیل متن فارسی موفق بود.
 - ۷ تست Kotlin/JVM: استقلال کپی و ویرایش وضعیت، رتبه و مالکیت کارت، هندسهٔ جدول و نسبت تصویر، رد تطبیق مبهم/ناشناخته/تک‌کلاس، الزام مشاهدهٔ کامل و بازسازی دسته‌ها و جلوگیری از استفادهٔ مشاهدهٔ منقضی/متوقف/مکث‌شده.
 - کتابخانهٔ ELF64/AArch64 با تراز قطعات LOAD برابر 0x4000 ساخته شد. APK شامل همان کتابخانه است. بررسی امضای v2 و `zipalign -c -P 16 -v 4` موفق بود.
-- `testDebugUnitTest lintDebug assembleDebug` از خود Wrapper موفق بود. Lint خطای مانع ساخت نداشت؛ 14 هشدار باقی ماند، عمدتاً رشته‌های UI، سازندهٔ view، ABI اختصاصی ARM64 و Gravity.LEFT عمدی برای مختصات فیزیکی تصویر. گزارش دقیق در Artifact تست‌های CI موجود خواهد بود.
+- `testDebugUnitTest lintDebug assembleDebug` از خود Wrapper موفق بود. Lint خطای مانع ساخت نداشت؛ 14 هشدار باقی ماند، عمدتاً رشته‌های UI، سازندهٔ view، ABI اختصاصی ARM64 و Gravity.LEFT عمدی برای مختصات فیزیکی تصویر. گزارش دقیق در Artifact تست‌های CI موجود است.
 
 لاگ‌های ساخت و تست و CSV در [results](results) نگهداری می‌شوند. APK debug با کلید توسعه امضا شده است و انتشار فروشگاهی محسوب نمی‌شود.
 
@@ -46,8 +46,18 @@
 
 ## خطای نخست GitHub Actions و اصلاح
 
-اجرای [43147421362](https://github.com/mehrdadtorkashvand901-lab/PlatoLegionsOverlay/actions/runs/43147421362) تست موتور و JNI را گذراند. نصب SDK به علت `Failed to find package tools` در تنظیم پیش‌فرض `android-actions/setup-android@v3` شکست خورد؛ `packages: platform-tools` جایگزین مقدار پیش‌فرض `tools platform-tools` شد. این خطای آماده‌سازی ابزار بود، نه خطای کامپایل برنامه. ثبت نتیجهٔ اجرای اصلاح‌شده پس از اتمام انجام می‌شود.
+اجرای [43147421362](https://github.com/mehrdadtorkashvand901-lab/PlatoLegionsOverlay/actions/runs/43147421362) تست موتور و JNI را گذراند. نصب SDK به علت `Failed to find package tools` در تنظیم پیش‌فرض `android-actions/setup-android@v3` شکست خورد؛ `packages: platform-tools` جایگزین مقدار پیش‌فرض `tools platform-tools` شد. این خطای آماده‌سازی ابزار بود، نه خطای کامپایل برنامه. اجرای اصلاح‌شدهٔ 43147780538 موفق شد. پس از اصلاح چرخهٔ بازبینی تصویر، اجرای نهایی [43148362910](https://github.com/mehrdadtorkashvand901-lab/PlatoLegionsOverlay/actions/runs/43148362910) نیز برای کامیت `c8ecc29` با موفقیت پایان یافت.
 
 در بازبینی نهایی، منشأ تصویری وضعیت حفظ می‌شود: تغییر/توقف/مکث مشاهده، هم مسیر Overlay و هم دکمهٔ تحلیل داخل برنامه را تا بازبینی تازه مسدود می‌کند. ورود یا اصلاح دستی منشأ دستی دارد؛ استفادهٔ دستی در Overlay همچنان انتخاب صریح می‌خواهد.
 
 هنگام نمایش Activity، نمونه‌برداری مکث می‌شود تا فریم خود دستیار جای تصویر بازی را نگیرد. در برگشت به بازی، پذیرش قبلی تا دریافت مشاهدهٔ تازه برای نمایش پیشنهاد کافی نیست. این مسیر در تست معتبرماندن مشاهده پوشش داده شده و ساخت و Lint پس از اصلاح موفق بود؛ آزمون تعاملی روی دستگاه همچنان انجام نشده است.
+
+## خروجی تأییدشدهٔ CI
+
+- [Artifact APK](https://github.com/mehrdadtorkashvand901-lab/PlatoLegionsOverlay/actions/runs/43148362910/artifacts/13911749440) و [گزارش اجرای موفق](https://github.com/mehrdadtorkashvand901-lab/PlatoLegionsOverlay/actions/runs/43148362910)، کامیت کد `c8ecc29ea9a8e02075e1d2d15ba442abdc4f6ce7`.
+- ۲۵ تست Rust، JNI واقعی در JVM، ۷ تست Kotlin، Lint، ساخت ARM64، بررسی امضا و تراز: موفق.
+- APK دانلودشده از همان Artifact: ۳۱۰۸۱۹۶ بایت، بستهٔ `ir.legions.overlay`، نسخهٔ ۰.۱.۰، minSdk=33، targetSdk=35 و بدون مجوز INTERNET.
+- SHA-256 خود APK: `31cfaa5cb0e74e087750cd7320c42383817dfb8a1d9d13e8c9b9afccc1980c79`؛ با SHA256SUMS منتشرشده در Artifact برابر بود. امضا و zipalign پس از دانلود نیز موفق بودند.
+- [مدرک ماشینی اجرای CI](results/ci-final.json) شامل شناسهٔ اجرا، کامیت، jobها و Artifacts است. هش ZIP خود Artifact با هش فایل APK تفاوت دارد.
+
+موفقیت این ساخت، آزمون دستگاه یا تأیید دقت تشخیص روی Plato محسوب نمی‌شود؛ محدودیت‌های بخش بالا برقرارند. هشدارهای منسوخ‌شدن Node 20 / setup-java v4 در CI مانع اجرا نشدند؛ runner اکشن‌ها را روی Node 24 اجرا کرد.

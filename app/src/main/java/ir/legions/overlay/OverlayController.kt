@@ -77,8 +77,10 @@ class OverlayController(private val service: CaptureService) {
         Session.listeners.add(listener); update()
     }
     fun update() {
-        summary?.text="${CaptureRuntime.status}\n${if(CaptureRuntime.paused) "مکث" else Session.message}"
+        val fresh=CaptureRuntime.manualSnapshot || CaptureRuntime.currentObservationIsAccepted()
+        summary?.text="${CaptureRuntime.status}\n${if(CaptureRuntime.paused) "مکث" else if(fresh) Session.message else "برای تحلیل، وضعیت را بازبینی کنید"}"
         clearIndicator()
+        if(!fresh) return
         val m=Session.analysis?.optJSONObject("best_move") ?: return
         val frame=CaptureRuntime.frame ?: return
         val c=VisionStore(service).calibration() ?: return

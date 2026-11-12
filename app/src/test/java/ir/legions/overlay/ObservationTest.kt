@@ -6,9 +6,12 @@ import org.json.JSONObject
 class ObservationTest {
     @Test fun changedPausedOrStoppedScreenCannotReuseAnAcceptedObservation() {
         try {
-            CaptureRuntime.running=true; CaptureRuntime.paused=false
+            CaptureRuntime.running=true; CaptureRuntime.paused=false; CaptureRuntime.awaitingFreshFrame=false
             CaptureRuntime.candidate=JSONObject(); CaptureRuntime.candidateSequence=7; CaptureRuntime.acceptedSequence=7
             assertTrue(CaptureRuntime.currentObservationIsAccepted())
+            CaptureRuntime.awaitingFreshFrame=true
+            assertFalse(CaptureRuntime.currentObservationIsAccepted())
+            CaptureRuntime.awaitingFreshFrame=false
             CaptureRuntime.candidateSequence=8
             assertFalse(CaptureRuntime.currentObservationIsAccepted())
             CaptureRuntime.acceptedSequence=8; CaptureRuntime.paused=true
@@ -17,6 +20,6 @@ class ObservationTest {
             assertFalse(CaptureRuntime.currentObservationIsAccepted())
             CaptureRuntime.running=true; CaptureRuntime.invalidate()
             assertFalse(CaptureRuntime.currentObservationIsAccepted())
-        } finally { CaptureRuntime.running=false; CaptureRuntime.paused=false; CaptureRuntime.invalidate() }
+        } finally { CaptureRuntime.running=false; CaptureRuntime.paused=false; CaptureRuntime.awaitingFreshFrame=false; CaptureRuntime.invalidate() }
     }
 }

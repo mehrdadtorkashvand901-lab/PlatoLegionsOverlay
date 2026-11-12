@@ -23,8 +23,16 @@ class MainActivity : Activity() {
         if (Session.state == null) runCatching { newGame(arrayOf(0,1,2,3)) }.onFailure { Session.error(it.message ?: "خطای کتابخانه") }
         render()
     }
-    override fun onStart() { super.onStart(); Session.listeners.add(refresh); render() }
-    override fun onStop() { Session.listeners.remove(refresh); super.onStop() }
+    override fun onStart() { super.onStart(); CaptureRuntime.appVisible=true; Session.listeners.add(refresh); render() }
+    override fun onStop() {
+        Session.listeners.remove(refresh); CaptureRuntime.appVisible=false
+        if(CaptureRuntime.running) {
+            CaptureRuntime.awaitingFreshFrame=true
+            CaptureRuntime.status="در انتظار مشاهدهٔ تازهٔ بازی"
+            Session.notifyChange()
+        }
+        super.onStop()
+    }
     private fun dp(n: Int)=(n*resources.displayMetrics.density).toInt()
     private fun column()=LinearLayout(this).apply { orientation=LinearLayout.VERTICAL; layoutDirection=View.LAYOUT_DIRECTION_RTL }
     private fun text(s: String, size: Float=16f)=TextView(this).apply { text=s; textSize=size; setPadding(dp(6),dp(6),dp(6),dp(6)); setTextColor(Color.rgb(23,46,48)) }

@@ -62,7 +62,7 @@ class CaptureService: Service() {
             val captureTick=object: Runnable {
                 override fun run() {
                     if(closed) return
-                    if(CaptureRuntime.paused) { lastState=null; stable=0; handler.postDelayed(this,1500); return }
+                    if(CaptureRuntime.paused || CaptureRuntime.appVisible) { lastState=null; stable=0; handler.postDelayed(this,1500); return }
                     // Hide our own windows before acquiring the compositor's next frame.
                     main.post {
                         if(closed) return@post
@@ -80,6 +80,7 @@ class CaptureService: Service() {
             }
             handler.postDelayed(captureTick,500)
             display=projection!!.createVirtualDisplay("LegionsScreen",width,height,resources.displayMetrics.densityDpi,DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR,reader!!.surface,null,handler)
+            CaptureRuntime.frame=null; CaptureRuntime.awaitingFreshFrame=true
             CaptureRuntime.running=true; CaptureRuntime.paused=false; CaptureRuntime.invalidate(); CaptureRuntime.status="ضبط فعال؛ کالیبراسیون و نمونه‌ها را تنظیم کنید"
             Session.restore(this); overlay=OverlayController(this).also { it.show() }
         } catch(e: Exception) { Session.error("ضبط شروع نشد: ${e.message}"); stopSelf() }
@@ -89,7 +90,7 @@ class CaptureService: Service() {
                 val image=source.acquireLatestImage() ?: return
                 try {
                     val now=SystemClock.elapsedRealtime()
-                    if(CaptureRuntime.paused || now-lastFrame<1500) return
+                    if(CaptureRuntime.paused || CaptureRuntime.appVisible || now-lastFrame<1500) return
                     val pm=getSystemService(PowerManager::class.java)
                     if(pm.currentThermalStatus>=PowerManager.THERMAL_STATUS_SEVERE) {
                         main.post { CaptureRuntime.invalidate(); CaptureRuntime.status="گوشی گرم است؛ تشخیص موقتاً متوقف شد"; Session.stop() }; return
@@ -126,9 +127,10 @@ class CaptureService: Service() {
         if(serialized==lastState) stable++ else { stable=1; lastState=serialized }
         if(stable<2) return reject("در انتظار دو تصویر یکسان و معتبر",false)
         main.post {
-            if(CaptureRuntime.paused || !CaptureRuntime.running) return@post
+            if(CaptureRuntime.paused || CaptureRuntime.appVisible || !CaptureRuntime.running) return@post
             val changed=CaptureRuntime.candidate?.toString()!=serialized
             CaptureRuntime.candidate=state
+            CaptureRuntime.awaitingFreshFrame=false
             // Keep sequence for the same complete observed state; changed frames invalidate advice.
             if(changed) {
                 CaptureRuntime.candidateSequence=frame.sequence; CaptureRuntime.acceptedSequence=-1
@@ -141,7 +143,7 @@ class CaptureService: Service() {
     private fun reject(reason: String,resetStability: Boolean=true) {
         if(resetStability) { stable=0; lastState=null }
         main.post {
-            if(closed) return@post
+            if(closed || CaptureRuntime.appVisible) return@post
             val hadAdvice=CaptureRuntime.candidate!=null || Session.analysis!=null
             CaptureRuntime.invalidate(); CaptureRuntime.status=reason
             if(hadAdvice && !CaptureRuntime.manualSnapshot) Session.stop() else overlay?.update()

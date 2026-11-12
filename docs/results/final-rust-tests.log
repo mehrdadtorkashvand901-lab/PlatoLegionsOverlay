@@ -1,0 +1,63 @@
+   Compiling legions_ai v1.2.2 (/workspace/PlatoLegionsOverlay)
+    Finished `release` profile [optimized] target(s) in 3.45s
+     Running unittests src/lib.rs (target/release/deps/legions_ai-49739a320664179f)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/main.rs (target/release/deps/legions_ai-27a738ffe3f4a82f)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/library.rs (target/release/deps/library-b0c277830ac6b728)
+
+running 7 tests
+test bounded_search_and_table_agree_at_fixed_depth ... ok
+test all_nine_card_types_play_through_valid_games ... ok
+test json_bridge_reports_errors_and_round_trips ... ok
+test legal_game_reaches_terminal_and_analysis_never_mutates_input ... ok
+test rejects_incomplete_bad_ranks_wrong_turn_and_hidden_bombs ... ok
+test search_optimizations_agree_with_exhaustive_endgame_oracle ... ok
+test deadline_returns_a_legal_move_and_last_complete_depth ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/rules.rs (target/release/deps/rules-910e3b70f5d1b7dd)
+
+running 14 tests
+test combo_continues_on_greater_rank ... ok
+test invalid_coordinates_and_index_are_rejected_without_mutation ... ok
+test keeper_attacks_first_visible_card_at_range ... ok
+test one_captures_a ... ok
+test lancer_pierces_chain_and_stops_at_ally ... ok
+test piercing_tie_does_not_join_same ... ok
+test ravager_improves_on_capture_and_being_captured ... ok
+test saboteur_only_bombs_empty_neighbours ... ok
+test same_includes_allied_swarm_with_its_actual_owner_bonus ... ok
+test same_starts_combo_but_does_not_enable_lancer_pierce ... ok
+test siren_pulls_allies_and_detonates_crossed_bombs ... ok
+test slayer_reverses_rank_comparison ... ok
+test titan_flips_axis_for_allies_too ... ok
+test warden_defense_bonus_prevents_capture ... ok
+
+test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/upstream.rs (target/release/deps/upstream-906f3f1abaaa185e)
+
+running 4 tests
+test blue_starts_with_bonus_and_captured_cards_count_for_current_owner ... ok
+test bombs_stack_and_ranks_stay_in_bounds ... ok
+test decks_have_four_orientations_and_red_is_mirrored ... ok
+test occupied_cell_does_not_consume_card ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/benchmark.rs (target/release/examples/benchmark-0d06c9061acfa670)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

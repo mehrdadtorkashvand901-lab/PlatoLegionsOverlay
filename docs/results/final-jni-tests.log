@@ -1,0 +1,5 @@
+   Compiling jni-sys v0.3.1
+   Compiling jni v0.21.1
+   Compiling legions_ai v1.2.2 (/workspace/PlatoLegionsOverlay)
+    Finished `release` profile [optimized] target(s) in 5.65s
+JNI: new state, invalid JSON, Persian strings passed

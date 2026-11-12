@@ -50,3 +50,21 @@ fn midgame(n: usize) -> State {
         assert!(s.finished());
     }}
 }
+
+#[test] fn search_optimizations_agree_with_exhaustive_endgame_oracle() {
+    use legions_ai::search::analyze_config;
+    fn oracle(s: &State, depth: u8) -> i16 {
+        let e=legions_ai::utility::evaluation(&s.board) as i16;
+        if s.finished() { return if e>0 {100+e} else {-100+e}; }
+        if depth==0 {return e;}
+        let scores=s.moves().into_iter().map(|m| oracle(&s.play(m).unwrap(),depth-1));
+        if s.turn==1 {scores.max().unwrap()} else {scores.min().unwrap()}
+    }
+    for n in [13,14,15] {
+        let s=midgame(n); let expected=oracle(&s,3);
+        for (table,ordered,iterative) in [(false,false,false),(false,true,false),(true,true,false),(true,true,true)] {
+            let r=analyze_config(&s,2000,3,table,ordered,iterative).unwrap();
+            assert!(!r.timed_out); assert_eq!(r.score,expected); assert!(s.legal(r.best_move.unwrap()));
+        }
+    }
+}

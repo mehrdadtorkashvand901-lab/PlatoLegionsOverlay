@@ -8,6 +8,7 @@ macro_rules! flush {
     };
 }
 
+#[allow(unused_macros)]
 macro_rules! input {
     ($str:expr, $msg:expr) => {
         stdin().read_line(&mut $str).expect($msg);
@@ -15,6 +16,7 @@ macro_rules! input {
 }
 
 pub(crate) use flush;
+#[allow(unused_imports)]
 pub(crate) use input;
 
 // calculates score for each player

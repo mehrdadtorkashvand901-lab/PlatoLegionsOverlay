@@ -1,0 +1,7 @@
+case,variant,depth,score,median_us,nodes,table_hits
+opening,upstream_min_pruning,2,-1,2146,-,-
+opening,upstream_full_ab,2,-1,882,-,-
+middle,upstream_min_pruning,3,6,9860,-,-
+middle,upstream_full_ab,3,6,696,-,-
+ending,upstream_min_pruning,4,-101,1591,-,-
+ending,upstream_full_ab,4,-101,147,-,-

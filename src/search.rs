@@ -21,7 +21,7 @@ pub struct Analysis {
     pub timed_out: bool,
     pub solved: bool,
 }
-struct Search { end: Instant, table: HashMap<State, Entry>, nodes: u64, hits: u64, use_table: bool }
+struct Search { end: Instant, table: HashMap<State, Entry>, nodes: u64, hits: u64, use_table: bool, order_moves: bool }
 impl Search {
     fn check(&mut self) -> Result<(), ()> {
         self.nodes += 1;
@@ -47,12 +47,12 @@ impl Search {
         }
         let mut moves = s.moves();
         // Upstream prioritizes contact with enemies. Also try the prior PV first.
-        moves.sort_by_cached_key(|m| {
+        if self.order_moves { moves.sort_by_cached_key(|m| {
             let preferred = entry.map(|e| e.best == *m).unwrap_or(false);
             let n = crate::card::Card::get_neighbours(&s.board,m.row,m.col,s.deck()[m.card].name);
             let enemies = n.iter().flatten().filter(|(y,x)| s.board[*y][*x].as_ref().unwrap().player != s.turn).count();
             (!preferred, std::cmp::Reverse(enemies), s.bombs[m.row][m.col])
-        });
+        }); }
         let mut best_score = if s.turn == 1 { -INF } else { INF };
         let mut best = None;
         for m in moves {
@@ -76,16 +76,24 @@ impl Search {
 }
 
 pub fn analyze(s: &State, budget_ms: u64, max_depth: u8) -> Result<Analysis, String> {
-    analyze_options(s, budget_ms, max_depth, true)
+    // Host ablations showed that full-state hashing and sorting cost more than
+    // they save on the measured positions. Keep the anytime path lean; retain
+    // the independently tested variants for later device-specific profiling.
+    analyze_config(s, budget_ms, max_depth, false, false, true)
 }
 #[doc(hidden)]
 pub fn analyze_options(s: &State, budget_ms: u64, max_depth: u8, use_table: bool) -> Result<Analysis, String> {
+    analyze_config(s,budget_ms,max_depth,use_table,true,true)
+}
+/// Independent switches for reproducible performance comparisons, not exposed over JNI.
+#[doc(hidden)]
+pub fn analyze_config(s: &State, budget_ms: u64, max_depth: u8, use_table: bool, order_moves: bool, iterative: bool) -> Result<Analysis, String> {
     s.validate()?;
     if !(10..=2000).contains(&budget_ms) || !(1..=16).contains(&max_depth) {
         return Err("زمان جست‌وجو باید ۱۰ تا ۲۰۰۰ میلی‌ثانیه و عمق ۱ تا ۱۶ باشد".into());
     }
     let start = Instant::now();
-    let mut search = Search { end: start + Duration::from_millis(budget_ms), table: HashMap::new(), nodes: 0, hits: 0, use_table };
+    let mut search = Search { end: start + Duration::from_millis(budget_ms), table: HashMap::new(), nodes: 0, hits: 0, use_table, order_moves };
     let mut result = Analysis { best_move: s.moves().first().copied(), score: evaluation(&s.board) as i16,
         completed_depth: 0, nodes: 0, table_hits: 0, elapsed_ms: 0, timed_out: false, solved: false };
     let remaining = (s.blue.len() + s.red.len()) as u8;
@@ -94,7 +102,8 @@ pub fn analyze_options(s: &State, budget_ms: u64, max_depth: u8, use_table: bool
         result.score = if result.score > 0 { 100 + result.score } else { -100 + result.score };
         result.solved = true;
     }
-    for depth in 1..=max_depth.min(remaining) {
+    let last = max_depth.min(remaining);
+    for depth in (if iterative { 1 } else { last.max(1) })..=last {
         match search.minimax(s, depth, -INF, INF) {
             Ok((score, best)) => { result.best_move = best; result.score = score; result.completed_depth = depth; },
             Err(()) => { result.timed_out = true; break; }

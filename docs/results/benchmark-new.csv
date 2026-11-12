@@ -1,0 +1,16 @@
+case,variant,depth,score,median_us,nodes,table_hits
+opening,fixed,2,-1,1040,15817,0
+opening,ordered,2,-1,1138,1609,0
+opening,table,2,-1,1436,1609,0
+opening,iterative,2,-1,1540,1930,0
+opening,iterative_lean,2,-1,1015,16138,0
+middle,fixed,3,6,544,5419,0
+middle,ordered,3,6,896,4135,0
+middle,table,3,6,1606,4135,0
+middle,iterative,3,6,1312,3969,0
+middle,iterative_lean,3,6,584,6101,0
+ending,fixed,4,-101,151,1697,0
+ending,ordered,4,-101,142,903,0
+ending,table,4,-101,543,855,21
+ending,iterative,4,-101,703,1188,21
+ending,iterative_lean,4,-101,287,2606,0

@@ -1,3 +1,8 @@
-/target
-/.vscode
-/Legions AI.code-workspace
+/target/
+/.gradle/
+/**/build/
+/local.properties
+/.idea/
+*.iml
+*.apk
+*.zip

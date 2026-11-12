@@ -28,8 +28,18 @@ class VisionTest {
         assertEquals(1,s.getInt("turn"))
         labels["turn"]="{\"turn\":0}"; assertTrue(runCatching { VisionDecoder.decode(labels) }.isFailure)
     }
-    @Test fun manualCardsRetainBaseRanksAndOwnership() {
-        val card=GameModel.card(7,2,listOf(7,3,3,3)); assertEquals("Swarm",card.getString("name")); assertEquals(2,card.getInt("player"))
-        assertTrue(runCatching { GameModel.card(0,1,listOf(0,3,3,3)) }.isFailure)
+    @Test fun decoderRetainsBothCompleteDecksAndOwnership() {
+        val labels=VisionDecoder.requiredKeys.associateWith { key ->
+            when {
+                key=="turn" -> "{\"turn\":1}"
+                key.startsWith("blue_") -> JSONObject().put("card",GameModel.card(0,1,listOf(6,6,4,4))).put("bomb",0).toString()
+                key.startsWith("red_") -> JSONObject().put("card",GameModel.card(1,2,listOf(9,5,1,5))).put("bomb",0).toString()
+                else -> "{\"card\":null,\"bomb\":0}"
+            }
+        }
+        val s=VisionDecoder.decode(labels)
+        assertEquals(8,s.getJSONArray("blue").length()); assertEquals(8,s.getJSONArray("red").length())
+        assertEquals(2,s.getJSONArray("red").getJSONObject(0).getInt("player"))
+        assertEquals(9,s.getJSONArray("red").getJSONObject(0).getInt("top"))
     }
 }

@@ -13,5 +13,6 @@ object CaptureRuntime {
     @Volatile var running = false
     @Volatile var paused = false
     @Volatile var manualSnapshot = false
+    fun currentObservationIsAccepted() = running && !paused && candidate!=null && candidateSequence>=0 && acceptedSequence==candidateSequence
     fun invalidate() { candidate=null; candidateSequence=-1; acceptedSequence=-1 }
 }

@@ -37,7 +37,7 @@ class OverlayController(private val service: CaptureService) {
         summary=TextView(service).apply { textSize=13f; setTextColor(Color.BLACK) }; details.addView(summary)
         fun action(title: String,f: () -> Unit) { details.addView(Button(service).apply { text=title; textSize=12f; isAllCaps=false; setOnClickListener { f() } }) }
         action("تحلیل وضعیت تأییدشده") {
-            val fresh=CaptureRuntime.manualSnapshot || (CaptureRuntime.acceptedSequence==CaptureRuntime.candidateSequence && CaptureRuntime.candidate!=null)
+            val fresh=CaptureRuntime.manualSnapshot || CaptureRuntime.currentObservationIsAccepted()
             if(!fresh) Session.error("ابتدا وضعیت شناسایی‌شده را در برنامه بازبینی و تأیید کنید") else Session.analyze(service)
         }
         action("مکث / ادامهٔ ضبط و تشخیص") {

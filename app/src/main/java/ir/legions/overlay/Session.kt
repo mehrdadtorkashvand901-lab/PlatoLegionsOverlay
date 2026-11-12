@@ -15,10 +15,13 @@ object Session {
     var revision = 0L; private set
     var analysis: JSONObject? = null; private set
     var busy = false; private set
+    private var sourceFromCapture=false
     var message = "وضعیت بازی را وارد کنید"; private set
     val listeners = mutableSetOf<() -> Unit>()
     fun notifyChange() { listeners.toList().forEach { it() } }
-    fun set(s: JSONObject, context: Context) {
+    fun set(s: JSONObject, context: Context, fromCapture: Boolean=false) {
+        sourceFromCapture=fromCapture
+        CaptureRuntime.acceptedSequence=-1
         revision++; state = GameModel.clone(s); analysis = null; message = "وضعیت تغییر کرد؛ صحت آن را بررسی کنید"
         context.getSharedPreferences("game",0).edit().putString("state",s.toString()).apply(); notifyChange()
     }
@@ -32,6 +35,9 @@ object Session {
     fun stop() { revision++; analysis=null; message="تحلیل متوقف شد"; notifyChange() }
     fun analyze(context: Context) {
         if (busy) return
+        if(sourceFromCapture && !CaptureRuntime.manualSnapshot && !CaptureRuntime.currentObservationIsAccepted()) {
+            return error("تصویر تأییدشده دیگر تازه نیست؛ دوباره بازبینی کنید یا حالت دستی را صریحاً انتخاب کنید")
+        }
         val snapshot=state?.let(GameModel::clone) ?: return error("ابتدا وضعیت بازی را وارد کنید")
         val pm=context.getSystemService(PowerManager::class.java)
         if (pm.currentThermalStatus >= PowerManager.THERMAL_STATUS_SEVERE) return error("گوشی گرم است؛ پس از خنک‌شدن تحلیل کنید")

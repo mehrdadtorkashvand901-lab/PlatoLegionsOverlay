@@ -83,7 +83,7 @@ class VisionUi(private val activity: Activity) {
         AlertDialog.Builder(activity).setTitle("بازبینی تشخیص").setView(ScrollView(activity).apply { addView(text) }).setPositiveButton("تأیید و ورود به ویرایشگر") { _,_ -> safe {
             require(CaptureRuntime.candidateSequence==sequence && CaptureRuntime.candidate!=null) { "تصویر تغییر کرده است؛ دوباره بازبینی کنید" }
             EngineBridge.call(JSONObject().put("op","validate").put("state",s))
-            Session.set(s,activity); CaptureRuntime.acceptedSequence=sequence; CaptureRuntime.manualSnapshot=false
+            Session.set(s,activity,fromCapture=true); CaptureRuntime.acceptedSequence=sequence; CaptureRuntime.manualSnapshot=false
         }}.setNegativeButton("لغو",null).show()
     }
     fun clear() { AlertDialog.Builder(activity).setMessage("همهٔ نمونه‌های تصویری محلی پاک شوند؟").setPositiveButton("پاک‌کردن") { _,_ -> store.clearSamples(); CaptureRuntime.invalidate(); Session.stop() }.setNegativeButton("لغو",null).show() }

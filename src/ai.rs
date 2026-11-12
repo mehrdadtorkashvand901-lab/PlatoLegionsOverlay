@@ -113,12 +113,8 @@ pub fn ai(
         // make a copy of the decks
         let mut t_deck1: Vec<Card> = Default::default();
         let mut t_deck2: Vec<Card> = Default::default();
-        for i in 0..deck2.len() {
-            t_deck2.push(Card::copy(&deck2[i]));
-            if i < deck1.len() {
-                t_deck1.push(Card::copy(&deck1[i]));
-            }
-        }
+        for card in deck1.iter() { t_deck1.push(Card::copy(card)); }
+        for card in deck2.iter() { t_deck2.push(Card::copy(card)); }
 
         // spawn a thread to do the calculations
         let sender = tx.clone();
@@ -197,7 +193,8 @@ pub fn ai(
     return moves[best_move];
 }
 
-fn minimax(
+#[doc(hidden)]
+pub fn minimax(
     board: &mut [[Option<Card>; 5]; 4],
     deck1: &mut Vec<Card>,
     deck2: &mut Vec<Card>,

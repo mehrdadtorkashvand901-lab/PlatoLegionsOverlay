@@ -6,7 +6,7 @@ use std::{
 
 pub type Position = (usize, usize);
 
-#[derive(Clone, Copy, PartialEq, Debug)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
 pub enum Direction {
     Top,
     Right,
@@ -14,7 +14,7 @@ pub enum Direction {
     Left,
 }
 
-#[derive(Clone, Copy, PartialEq, Debug)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash, Debug, serde::Serialize, serde::Deserialize)]
 pub enum Unit {
     Warden,
     Keeper,
@@ -27,7 +27,8 @@ pub enum Unit {
     Lancer,
 }
 
-#[derive(Debug)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash, Debug, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct Card {
     pub name: Unit,
     pub top: u8,
@@ -403,6 +404,13 @@ impl Card {
         bombs: &mut [[u8; 5]; 4],
         neighbours: &mut [Option<Position>; 4],
     ) -> bool {
+        if mov.0 >= 4 || mov.1 >= 5 || !(1..=2).contains(&player) {
+            return false;
+        }
+        let deck = if player == 1 { &*deck1 } else { &*deck2 };
+        if card >= deck.len() || deck[card].player != player {
+            return false;
+        }
         // determine the cell on the board
         let cell = &mut board[mov.0][mov.1];
 
@@ -610,7 +618,6 @@ impl Card {
                 }
                 // Swarm gets ally bonus
                 Unit::Swarm => {
-                    let defending_player = (attacking_player % 2) + 1;
                     defense_value = min(
                         10,
                         defense_value + Card::swarm_count(board, defending_player),
@@ -635,7 +642,7 @@ impl Card {
             }
 
             // do the battle
-            if attack_value > defense_value {
+            if attack_value > defense_value || (attack_value == 1 && defense_value == 10) {
                 // attacker wins
                 return FightResult::Win;
             } else if attack_value == defense_value {
@@ -656,7 +663,7 @@ impl Card {
             board: &mut [[Option<Card>; 5]; 4],
             combo: bool,
             direction: Direction,
-            pierce: bool,
+            _pierce: bool,
         ) {
             // println!(
             //     "Handling a {:?} @ {}, {} vs {}, {} towards {:?} with same_count = {}, combo = {}, pierce = {}",
@@ -683,18 +690,14 @@ impl Card {
                     let (ny, nx) = neighbour_position;
 
                     // Lancer has pierce ability which attacks fallen neighbour's neighbour
-                    if !pierce && board[y][x].as_ref().unwrap().name == Unit::Lancer {
+                    if board[y][x].as_ref().unwrap().name == Unit::Lancer {
                         // fetch defender (card to be pierced)
                         let def = Card::get_neighbour(board, direction, ny, nx, Unit::Lancer);
 
                         // if there is a card to pierce
                         if let Some(d) = def {
-                            // swap lancer with it's defeated neighbour
-                            let temp_card = board[ny][nx].take();
-                            board[ny][nx] = board[y][x].take();
-
-                            // commence battle at the neighbour's position
-                            let battle_result = battle(board, neighbour_position, d, direction);
+                            // Keep the real board intact during piercing and Combo.
+                            let battle_result = battle(board, position, d, direction);
 
                             // check if there was a battle
                             if battle_result.is_some() {
@@ -702,7 +705,7 @@ impl Card {
                                 handle_result(
                                     battle_result.unwrap(),
                                     0,
-                                    neighbour_position,
+                                    position,
                                     d,
                                     board,
                                     combo,
@@ -711,9 +714,6 @@ impl Card {
                                 );
                             }
 
-                            // now put the cards back into their original positions
-                            board[y][x] = board[ny][nx].take();
-                            board[ny][nx] = temp_card;
                         }
                     }
                 }

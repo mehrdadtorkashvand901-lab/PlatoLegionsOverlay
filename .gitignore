@@ -6,3 +6,4 @@
 *.iml
 *.apk
 *.zip
+/app/src/main/jniLibs/
